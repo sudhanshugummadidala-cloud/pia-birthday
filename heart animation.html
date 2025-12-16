@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Quest: Love Meter Edition</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- ANIMATED BACKGROUND --- */
+        body {
+            font-family: 'Montserrat', sans-serif; 
+            background: linear-gradient(-45deg, #1a0505, #4a0404, #2c0b0b, #000000);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #f0f0f0;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- INK SPLASH OVERLAY --- */
+        #ink-splash {
+            position: fixed; top: 50%; left: 50%; width: 10px; height: 10px;
+            background-color: #000; border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            z-index: 900; pointer-events: none;
+            transition: transform 3s cubic-bezier(0.645, 0.045, 0.355, 1); 
+        }
+        .expand-ink { transform: translate(-50%, -50%) scale(300) !important; }
+
+        /* --- SPECIAL TEXT CONTAINER (Finale) --- */
+        #special-text-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 1000; pointer-events: none; 
+            background: radial-gradient(circle, rgba(0,0,0,0) 20%, rgba(0,0,0,0.8) 90%);
+        }
+
+        .glowing-text {
+            font-family: 'Cinzel', serif; 
+            font-size: 2.8rem; font-weight: 400; letter-spacing: 2px;
+            color: #ffffff; text-align: center; opacity: 0;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.3);
+            padding: 20px; max-width: 85%; transition: opacity 1s;
+            text-transform: uppercase; 
+        }
+
+        .fade-sequence { animation: fadeTextInOut 6s forwards; }
+
+        @keyframes fadeTextInOut {
+            0% { opacity: 0; transform: scale(0.95); filter: blur(8px); }
+            20% { opacity: 1; transform: scale(1); filter: blur(0px); }
+            80% { opacity: 1; transform: scale(1); filter: blur(0px); }
+            100% { opacity: 0; transform: scale(1.05); filter: blur(8px); }
+        }
+
+        /* --- PARTICLES --- */
+        .particles {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            overflow: hidden; z-index: 0; pointer-events: none;
+        }
+        .particle {
+            position: absolute; bottom: -20px;
+            background-color: rgba(212, 175, 55, 0.4); 
+            border-radius: 50%;
+            animation: floatUp 15s linear infinite;
+        }
+
+        /* --- CONTAINER --- */
+        .container {
+            background: rgba(20, 5, 5, 0.7);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 4px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            padding: 30px;
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+            position: relative; 
+            z-index: 2;
+            min-height: 580px; 
+            display: flex; flex-direction: column; justify-content: center;
+            transition: opacity 1s ease; 
+        }
+
+        h1, h2 {
+            font-family: 'Bodoni Moda', serif; font-weight: 700; font-style: italic;
+            font-size: 2.8rem; color: #e5cfaa;
+            text-shadow: 0 0 15px rgba(229, 207, 170, 0.3);
+            margin-bottom: 25px; line-height: 1.1;
+        }
+        
+        p { color: #d1d1d1; font-size: 0.95rem; letter-spacing: 1px; font-weight: 300; text-transform: uppercase; }
+
+        .btn {
+            display: block; width: 100%; padding: 15px; margin: 15px 0;
+            background: transparent; color: #e5cfaa; border: 1px solid #e5cfaa;
+            border-radius: 0px; cursor: pointer; font-family: 'Montserrat', sans-serif;
+            font-size: 14px; letter-spacing: 2px; font-weight: 600; text-transform: uppercase;
+            transition: 0.1s; position: relative; overflow: hidden; user-select: none;
+        }
+        .btn:active { background: #e5cfaa; color: #1a0505; transform: scale(0.98); }
+
+        .hidden { display: none !important; }
+
+        /* --- LEVEL 1 STYLES --- */
+        .timer-container { width: 100%; background: rgba(255,255,255,0.05); height: 2px; margin-top: 15px; }
+        .timer-bar { height: 100%; background: #e5cfaa; width: 100%; }
+
+        /* --- LEVEL 2 STYLES (HARD & FAST) --- */
+        .meter-container {
+            width: 80%; margin: 20px auto; height: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #555; position: relative;
+            border-radius: 4px; overflow: hidden;
+            display: flex; align-items: flex-end; justify-content: center;
+        }
+        .meter-fill {
+            width: 100%; height: 0%;
+            background: linear-gradient(to top, #8b0000, #ff4d4d);
+            transition: height 0.05s linear; 
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        }
+        .meter-marker {
+            position: absolute; top: 10%; width: 100%; height: 2px; background: #e5cfaa;
+            z-index: 2; opacity: 0.7;
+        }
+        .meter-label {
+            position: absolute; top: 6%; right: 5px; font-size: 10px; color: #e5cfaa;
+        }
+        .tap-btn {
+            font-size: 20px; padding: 20px; border: 2px solid #e5cfaa;
+        }
+
+        /* --- LEVEL 3 STYLES --- */
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
+        .card { height: 60px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(229, 207, 170, 0.2); display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; transition: transform 0.4s; }
+        .card.flipped { background: #e5cfaa; border-color: #e5cfaa; transform: rotateY(180deg); }
+        .card.flipped span { color: #1a0505; }
+        .card.matched { background: rgba(229, 207, 170, 0.2); border-color: #e5cfaa; opacity: 0.5; pointer-events: none; }
+
+        /* --- LEVEL 4 STYLES --- */
+        .trap-options button { background: rgba(255,255,255,0.05); border: 1px solid #555; color: #aaa; }
+        .trap-options button:hover { border-color: #fff; color: #fff; }
+
+        /* --- BACKGROUND HEART ANIMATION (FROM VIDEO) --- */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.3); opacity: 0.6; }
+            100% { transform: scale(1); opacity: 0.3; }
+        }
+
+        .final-heart-bg {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%); /* Start centered */
+            width: 320px; height: 320px;
+            z-index: 0; /* Behind text */
+            pointer-events: none;
+            display: flex; justify-content: center; align-items: center;
+        }
+        
+        /* The Pulsing Neon Heart */
+        .neon-heart {
+            width: 100%;
+            fill: none;
+            stroke: #ff0055; /* Neon Pink/Red */
+            stroke-width: 15;
+            stroke-linecap: round;
+            filter: drop-shadow(0 0 10px #ff0055) drop-shadow(0 0 30px #ff0055);
+            animation: pulse 1.5s ease-in-out infinite; /* The animation from the video */
+            transform-origin: center;
+        }
+
+        /* --- OVERLAYS --- */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 0, 0, 0.95);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 100; animation: fadeIn 0.6s ease;
+        }
+        
+        .victory-title {
+            font-family: 'Bodoni Moda', serif; font-style: italic; font-size: 3rem; 
+            color: #e5cfaa; margin-bottom: 10px; animation: riseUp 1s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes riseUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes floatUp { 0% { transform: translateY(0); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(-800px); opacity: 0; } }
+
+        .floating-heart {
+            position: absolute; bottom: -50px; font-size: 24px;
+            animation: floatHeart 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            filter: drop-shadow(0 0 5px red);
+        }
+        @keyframes floatHeart {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateY(-700px) scale(1.5); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="ink-splash"></div>
+    <div id="special-text-layer" class="hidden"><div id="special-msg-text" class="glowing-text"></div></div>
+    <div class="particles" id="particles"></div>
+
+    <div class="container" id="main-container">
+        
+        <div id="victory-screen" class="overlay hidden">
+            <div id="hearts-container" style="position:absolute; width:100%; height:100%; pointer-events:none;"></div>
+            <div style="font-size: 50px; margin-bottom: 10px; filter: grayscale(0.5);">🎉</div>
+            <div class="victory-title" id="victory-title">Title</div>
+            <p id="victory-sub" style="color: #aaa; margin-bottom: 40px; font-style: italic; text-transform: none; font-size: 1.2rem;">Subtext</p>
+            <button class="btn" style="width: 50%;" onclick="nextLevel()">Next &rarr;</button>
+        </div>
+
+        <div id="trap-overlay" class="overlay hidden">
+            <div style="font-size: 60px;">🤫</div>
+            <h2 id="trap-text" style="color: #e5cfaa; margin-top: 30px; font-size: 2rem;">Aap galat ho bachi...</h2>
+            <div id="final-reveal" class="hidden" style="text-align: center;">
+                 <div style="font-size: 60px; animation: riseUp 1s infinite alternate;">❤️</div>
+                 <h2 style="color: #e5cfaa; font-size: 2.2rem; line-height: 1.3;">Mai toh aapko jyada pyar krtta hun na!</h2>
+                 <button class="btn" style="margin-top: 30px;" onclick="showFinalLetter()">Open Gift 🎁</button>
+            </div>
+        </div>
+
+        <div id="screen-intro">
+            <h1>Birthday<br>Quest</h1>
+            <p>The Ultimate Edition</p>
+            <br>
+            <div style="font-size:70px; animation: riseUp 2s infinite alternate;">🌹</div>
+            <br>
+            <button class="btn" onclick="goToLevel(1)">Begin</button>
+        </div>
+
+        <div id="screen-level1" class="hidden">
+            <h2 style="font-size: 2rem;">Question I</h2>
+            <div class="timer-container"><div id="timer-bar" class="timer-bar"></div></div>
+            <p style="font-size: 10px; margin-top: 10px; color: #ff6666;">5 SECONDS</p>
+            <h3 id="quiz-question" style="margin: 30px 0; font-family: 'Bodoni Moda'; font-size: 1.5rem; font-style: italic;">Question</h3>
+            <div id="quiz-options"></div>
+        </div>
+
+        <div id="screen-level2" class="hidden">
+            <h2 style="font-size: 2rem;">Overflowing</h2>
+            <p>Tap (or use SPACEBAR) fast!</p>
+            
+            <div class="meter-container">
+                <div class="meter-marker"></div>
+                <div class="meter-label">MAX</div>
+                <div id="meter-fill" class="meter-fill"></div>
+            </div>
+
+            <button class="btn tap-btn" onclick="tapMeter()">TAP FAST!</button>
+        </div>
+
+        <div id="screen-level3" class="hidden">
+            <h2 style="font-size: 2rem;">Memory</h2>
+            <p>Match the 10 Pairs</p>
+            <div class="grid" id="memory-grid"></div>
+        </div>
+
+        <div id="screen-level4" class="hidden">
+            <h2 style="font-size: 2rem;">Final Truth</h2>
+            <p style="text-transform: none; font-style: italic; font-size: 1.2rem; margin-bottom: 30px;">Whom do I love the most?</p>
+            <div class="trap-options">
+                <button class="btn" onclick="triggerTrap()">Mera Bhai</button>
+                <button class="btn" onclick="triggerTrap()">Mummy Papa</button>
+                <button class="btn" onclick="triggerTrap()">Leo</button>
+            </div>
+        </div>
+
+        <div id="screen-final" class="hidden" style="position: relative;">
+            
+            <div class="final-heart-bg">
+                <svg viewBox="0 0 512 512" class="neon-heart">
+                    <path d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"/>
+                </svg>
+            </div>
+
+            <div style="font-size: 70px; position: relative; z-index: 2;">🥂</div>
+            <h1 style="position: relative; z-index: 2;">Happy Birthday</h1>
+            <p style="color: #e5cfaa; font-weight: 600; font-size: 1.2rem; margin-bottom: 20px; position: relative; z-index: 2;">Bachi jeet gyi ❤️</p>
+            <div style="font-family: 'Bodoni Moda'; font-style: italic; font-size: 1.1rem; line-height: 1.6; color: #ccc; position: relative; z-index: 2;">"You survived the games, the pressure, and the tricks. You are my everything."</div>
+            <br>
+            <button class="btn" style="margin-top: 30px; border-color: #fff; color: #fff; position: relative; z-index: 2;" onclick="triggerInkSequence()">One Last Surprise... ✨</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- PARTICLES ---
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for(let i=0; i<40; i++) {
+                let p = document.createElement('div'); p.className = 'particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.width = p.style.height = (Math.random() * 3 + 1) + 'px';
+                p.style.animationDuration = (Math.random() * 20 + 10) + 's';
+                p.style.animationDelay = (Math.random() * 5) + 's';
+                container.appendChild(p);
+            }
+        }
+        createParticles();
+
+        // --- DATA ---
+        const quizData = [
+            { q: "Where did we first meet?", options: ["Tinder", "Instagram", "Party", "Work"], a: 1 },
+            { q: "What's my favorite food?", options: ["Pizza", "Biryani", "Burger", "Pasta"], a: 1 },
+            { q: "My nickname for you?", options: ["Bachi", "Cutie", "Queen", "Pagal"], a: 0 }
+        ];
+        const cardIcons = ['❤️', '🌹', '💋', '💌', '🎁', '🔥', '💍', '🧸', '✨', '🌙']; 
+        const specialMessages = [
+            "happy birthday bachi,", "i hope you are having a gread day",
+            "ur my second mother and i wanna treat u as my first child  ,", "Is a gift I don't deserve.",
+            "Your smile is my sunrise.", "Your laugh is my home.",
+            "I love you more than words.", "Happy Birthday, My Love."
+        ];
+
+        // --- STATE ---
+        let currentQuizIndex = 0; let pendingNextLevel = '';
+        let timerInterval; let timeLeft = 5;
+        let matchCount = 0; let firstCard = null; let lockBoard = false;
+        
+        // METER GAME STATE
+        let meterLevel = 0;
+        let meterInterval;
+
+        // --- NAVIGATION ---
+        function goToLevel(level) {
+            document.querySelectorAll('.container > div:not(.particles)').forEach(el => el.classList.add('hidden'));
+            if(level === 1) { document.getElementById('screen-level1').classList.remove('hidden'); loadQuiz(); }
+            else if(level === 2) { document.getElementById('screen-level2').classList.remove('hidden'); initMeterGame(); }
+            else if(level === 3) { document.getElementById('screen-level3').classList.remove('hidden'); initMemory(); }
+            else if(level === 4) { document.getElementById('screen-level4').classList.remove('hidden'); }
+        }
+
+        // --- LEVEL 1: QUIZ ---
+        function loadQuiz() {
+            clearInterval(timerInterval); timeLeft = 5; document.getElementById('timer-bar').style.width = "100%";
+            let startTime = Date.now();
+            timerInterval = setInterval(() => {
+                let elapsed = (Date.now() - startTime) / 1000;
+                let remaining = 5 - elapsed;
+                let pct = (remaining / 5) * 100;
+                document.getElementById('timer-bar').style.width = pct + "%";
+                if(remaining <= 0) { clearInterval(timerInterval); alert("Time is up. Try again."); currentQuizIndex = 0; loadQuiz(); }
+            }, 50);
+            let q = quizData[currentQuizIndex]; document.getElementById('quiz-question').innerText = q.q;
+            let div = document.getElementById('quiz-options'); div.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                let btn = document.createElement('button'); btn.innerText = opt; btn.className = 'btn';
+                btn.onclick = () => {
+                    clearInterval(timerInterval);
+                    if(idx === q.a) {
+                        currentQuizIndex++;
+                        if(currentQuizIndex < quizData.length) loadQuiz(); else showVictory("Bachi Jeet Gyi!", "Brain & Beauty", 2);
+                    } else { alert("Incorrect. Try again."); currentQuizIndex = 0; loadQuiz(); }
+                }; div.appendChild(btn);
+            });
+        }
+
+        // --- LEVEL 2: LOVE METER (UPDATED - HARD & FAST DROP) ---
+        function initMeterGame() {
+            meterLevel = 0;
+            document.getElementById('meter-fill').style.height = "0%";
+            clearInterval(meterInterval);
+            
+            // Runs every 30ms (very fast)
+            meterInterval = setInterval(() => {
+                if(meterLevel > 0) {
+                    meterLevel -= 1.0; // Drops 1% every 30ms (very fast drain)
+                    if(meterLevel < 0) meterLevel = 0;
+                    document.getElementById('meter-fill').style.height = meterLevel + "%";
+                }
+            }, 30);
+        }
+
+        function tapMeter() {
+            meterLevel += 5; // You need ~7 taps per second to beat the drain
+            
+            if(meterLevel >= 100) {
+                meterLevel = 100;
+                document.getElementById('meter-fill').style.height = "100%";
+                clearInterval(meterInterval);
+                showVictory("Hayee Pagli!", "Overflowing Love ❤️", 3);
+            }
+            document.getElementById('meter-fill').style.height = meterLevel + "%";
+        }
+
+        // --- LEVEL 3: MEMORY ---
+        function initMemory() {
+            let grid = document.getElementById('memory-grid'); grid.innerHTML = ''; matchCount = 0;
+            let deck = [...cardIcons, ...cardIcons].sort(() => 0.5 - Math.random());
+            deck.forEach(icon => {
+                let card = document.createElement('div'); card.className = 'card'; card.dataset.icon = icon;
+                let inner = document.createElement('span'); inner.innerText = "?"; card.appendChild(inner);
+                card.onclick = function() { flipCard(this, inner, icon) }; grid.appendChild(card);
+            });
+        }
+        function flipCard(card, inner, icon) {
+            if (lockBoard) return; if (card === firstCard) return; if (card.classList.contains('matched')) return;
+            card.classList.add('flipped'); inner.innerText = icon;
+            if (!firstCard) { firstCard = card; return; } checkForMatch(card);
+        }
+        function checkForMatch(secondCard) {
+            lockBoard = true;
+            if (firstCard.dataset.icon === secondCard.dataset.icon) disableCards(secondCard); else unflipCards(secondCard);
+        }
+        function disableCards(secondCard) {
+            setTimeout(() => {
+                firstCard.classList.add('matched'); secondCard.classList.add('matched'); matchCount++; firstCard = null; lockBoard = false;
+                if(matchCount === 10) showVictory("Ye piddi toh topper hai", "Maan gya ustad 🫡", 4);
+            }, 400);
+        }
+        function unflipCards(secondCard) {
+            setTimeout(() => {
+                firstCard.classList.remove('flipped'); secondCard.classList.remove('flipped');
+                firstCard.firstChild.innerText = "?"; secondCard.firstChild.innerText = "?";
+                firstCard = null; lockBoard = false;
+            }, 800);
+        }
+
+        // --- LEVEL 4 ---
+        function triggerTrap() {
+            let overlay = document.getElementById('trap-overlay'); overlay.classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('trap-text').style.display = 'none';
+                document.querySelector('#trap-overlay > div:first-child').style.display = 'none';
+                document.getElementById('final-reveal').classList.remove('hidden'); createFloatingHearts();
+            }, 3000); 
+        }
+        function showFinalLetter() {
+            document.getElementById('trap-overlay').classList.add('hidden');
+            document.getElementById('screen-level4').classList.add('hidden');
+            document.getElementById('screen-final').classList.remove('hidden'); createFloatingHearts();
+        }
+
+        // --- INK SEQUENCE ---
+        async function triggerInkSequence() {
+            document.getElementById('ink-splash').classList.add('expand-ink');
+            const mainContainer = document.getElementById('main-container');
+            mainContainer.style.opacity = '0';
+            await new Promise(r => setTimeout(r, 2000));
+            mainContainer.classList.add('hidden');
+            const textLayer = document.getElementById('special-text-layer');
+            const textBox = document.getElementById('special-msg-text');
+            textLayer.classList.remove('hidden');
+            for (let msg of specialMessages) {
+                textBox.innerText = msg;
+                textBox.classList.remove('fade-sequence');
+                void textBox.offsetWidth;
+                textBox.classList.add('fade-sequence');
+                await new Promise(r => setTimeout(r, 6000));
+            }
+            textBox.innerText = "I LOVE YOU.";
+            textBox.style.opacity = 1; 
+            textBox.classList.remove('fade-sequence');
+        }
+
+        // --- UTILS ---
+        function showVictory(title, subtext, nextLevelId) {
+            let overlay = document.getElementById('victory-screen');
+            document.getElementById('victory-title').innerText = title;
+            document.getElementById('victory-sub').innerText = subtext;
+            createFloatingHearts(); overlay.classList.remove('hidden'); pendingNextLevel = nextLevelId;
+        }
+        function nextLevel() {
+            document.getElementById('victory-screen').classList.add('hidden');
+            document.getElementById('hearts-container').innerHTML = ''; goToLevel(pendingNextLevel);
+        }
+        function createFloatingHearts() {
+            let container = document.getElementById('hearts-container');
+            if(!container || !container.offsetParent) container = document.body;
+            for (let i = 0; i < 30; i++) {
+                let heart = document.createElement('div'); heart.innerHTML = '❤️'; heart.className = 'floating-heart';
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.animationDuration = (Math.random() * 3 + 2) + 's'; 
+                heart.style.fontSize = (Math.random() * 30 + 10) + 'px';
+                container.appendChild(heart);
+                setTimeout(() => heart.remove(), 4000);
+            }
+        }
+
+        // --- KEYBOARD LISTENER (Spacebar Support) ---
+        document.addEventListener('keydown', function(event) {
+            // Check if level 2 is currently active
+            if(!document.getElementById('screen-level2').classList.contains('hidden')) {
+                // If user presses Space, trigger the tap
+                if (event.code === 'Space') {
+                    // Prevent default scrolling
+                    event.preventDefault();
+                    tapMeter();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
